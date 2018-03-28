@@ -1,0 +1,8 @@
+#!/bin/bash
+#check if it exits
+if [ "$0" == "" ]; then
+    exit 1
+fi
+result=$(/home/martin/tests/timesink/spacer $2 | sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g')
+echo "msg $1 \"$result\""
+

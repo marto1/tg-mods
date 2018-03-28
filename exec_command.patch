@@ -1,0 +1,86 @@
+diff --git a/interface.c b/interface.c
+index f78619a..f018c3b 100644
+--- a/interface.c
++++ b/interface.c
+@@ -34,6 +34,8 @@
+ #include <stdarg.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <sys/types.h>
++#include <sys/wait.h>
+ 
+ #ifdef READLINE_GNU
+ #include <readline/readline.h>
+@@ -848,6 +850,58 @@ void do_msg (struct command *command, int arg_num, struct arg args[], struct in_
+   tgl_do_send_message (TLS, args[0].peer_id, ARG2STR(1), TGL_SEND_MSG_FLAG_REPLY(reply_id) | disable_msg_preview | do_html, NULL, print_msg_success_gw, ev);
+ }
+ 
++#define die(e) do { perror(e); exit(EXIT_FAILURE); } while (0);
++void interpreter (char *line);
++
++struct event *exec_ev = 0;
++static char exec_buf[10000];
++
++static void exec_in_interpreter (evutil_socket_t fd, short what, void *arg) {
++    interpreter (exec_buf);
++}
++
++void do_execute (struct command *command, int arg_num, struct arg args[], struct in_ev *ev) {
++  assert (arg_num == 3);
++  if (ev) { ev->refcnt ++; }
++  
++  int link[2];
++  pid_t pid;
++  char* chat_tmp = "chat#%d";
++  char* user_tmp = "user#%d";
++  char full_peer[64];
++  int peerr;
++  peerr = args[1].peer_id.peer_id;
++  if (args[1].peer_id.peer_type == TGL_PEER_USER){
++      snprintf (full_peer, sizeof (full_peer), user_tmp, peerr);
++  } else {
++      snprintf (full_peer, sizeof (full_peer), chat_tmp, peerr);
++  }
++  if (pipe(link)==-1)
++      die ("pipe");
++
++  if ((pid = fork()) == -1)
++      die ("fork");
++
++  if(pid == 0) {
++      dup2 (link[1], STDOUT_FILENO);
++      close (link[0]);
++      close (link[1]);
++
++      execv (args[0].str, (char *[]){ args[0].str, full_peer, args[2].str, NULL });
++      die ("execv");
++  } else {
++      close (link[1]);
++      int nbytes = read (link[0], exec_buf, sizeof(exec_buf));
++      exec_buf[nbytes] = '\0';
++      printf ("Output:\n%.*s\n", nbytes, exec_buf);
++      wait (NULL);
++      exec_ev = event_new (TLS->ev_base, 0, EV_READ,
++			   exec_in_interpreter, 0);
++      event_add (exec_ev, 0);
++  }
++}
++
++
+ void do_post (struct command *command, int arg_num, struct arg args[], struct in_ev *ev) {
+   assert (arg_num == 2);
+   if (ev) { ev->refcnt ++; }
+@@ -1710,6 +1764,7 @@ struct command commands[MAX_COMMANDS_SIZE] = {
+   {"main_session", {ca_none}, do_main_session, "main_session\tSends updates to this connection (or terminal). Useful only with listening socket", NULL},
+   {"mark_read", {ca_peer, ca_none}, do_mark_read, "mark_read <peer>\tMarks messages with peer as read", NULL},
+   {"msg", {ca_peer, ca_msg_string_end, ca_none}, do_msg, "msg <peer> <text>\tSends text message to peer", NULL},
++  {"!", {ca_file_name, ca_peer, ca_msg_string_end, ca_none}, do_execute, "! <program> <peer> <text>\texecute command's output in interpreter", NULL},
+   {"msg_kbd", {ca_peer, ca_string, ca_msg_string_end, ca_none}, do_msg_kbd, "msg <peer> <kbd> <text>\tSends text message to peer with custom kbd", NULL},
+   {"post", {ca_peer, ca_msg_string_end, ca_none}, do_post, "post <peer> <text>\tSends text message to peer as admin", NULL},
+   {"post_audio", {ca_peer, ca_file_name, ca_none}, do_post_audio, "post_audio <peer> <file>\tPosts audio to peer", NULL},
+diff --git a/tgl b/tgl
+--- a/tgl
++++ b/tgl
+@@ -1 +1 @@
+-Subproject commit ffb04caca71de0cddf28cd33a4575922900a59ed
++Subproject commit ffb04caca71de0cddf28cd33a4575922900a59ed-dirty
