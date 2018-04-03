@@ -1,0 +1,17 @@
+#!/bin/bash
+#load_file_n 367 3
+#    load_file 367 366 365 364
+
+#check if it exists 
+if [ "$0" == "" ]; then
+    exit 1
+fi
+
+it=$(($1-$2))
+
+for i in $(seq $it $1)
+do
+    echo "load_file $i"
+done
+
+
