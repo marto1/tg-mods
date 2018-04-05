@@ -7,9 +7,13 @@ if [ "$0" == "" ]; then
     exit 1
 fi
 
-it=$(($1-$2))
+IFS='x' read -ra ADDR <<< "$2"
 
-for i in $(seq $it $1)
+f="${ADDR[0]}"
+s="${ADDR[1]}"
+it=$(($f-$s))
+
+for i in $(seq $it $f)
 do
     echo "load_file $i"
 done
