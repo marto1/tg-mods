@@ -1,5 +1,5 @@
 diff --git a/interface.c b/interface.c
-index f78619a..f018c3b 100644
+index f78619a..c224c5d 100644
 --- a/interface.c
 +++ b/interface.c
 @@ -34,6 +34,8 @@
@@ -11,7 +11,7 @@ index f78619a..f018c3b 100644
  
  #ifdef READLINE_GNU
  #include <readline/readline.h>
-@@ -848,6 +850,58 @@ void do_msg (struct command *command, int arg_num, struct arg args[], struct in_
+@@ -848,6 +850,72 @@ void do_msg (struct command *command, int arg_num, struct arg args[], struct in_
    tgl_do_send_message (TLS, args[0].peer_id, ARG2STR(1), TGL_SEND_MSG_FLAG_REPLY(reply_id) | disable_msg_preview | do_html, NULL, print_msg_success_gw, ev);
  }
  
@@ -19,16 +19,29 @@ index f78619a..f018c3b 100644
 +void interpreter (char *line);
 +
 +struct event *exec_ev = 0;
-+static char exec_buf[10000];
++static char exec_buf[200000];
++static int exec_len = 0;
 +
 +static void exec_in_interpreter (evutil_socket_t fd, short what, void *arg) {
-+    interpreter (exec_buf);
++    int i;
++    int tmpi = 0;
++    char tmpbuf[20000];
++    for (i = 0; i < exec_len; i++) {
++	if (exec_buf[i] != '\n') {
++	    tmpbuf[tmpi] = exec_buf[i];
++	    tmpi++;
++	} else {
++	    tmpbuf[tmpi] = '\0';
++	    interpreter (tmpbuf);
++	    tmpi = 0;
++	}
++    }
 +}
 +
 +void do_execute (struct command *command, int arg_num, struct arg args[], struct in_ev *ev) {
 +  assert (arg_num == 3);
 +  if (ev) { ev->refcnt ++; }
-+  
++
 +  int link[2];
 +  pid_t pid;
 +  char* chat_tmp = "chat#%d";
@@ -59,6 +72,7 @@ index f78619a..f018c3b 100644
 +      int nbytes = read (link[0], exec_buf, sizeof(exec_buf));
 +      exec_buf[nbytes] = '\0';
 +      printf ("Output:\n%.*s\n", nbytes, exec_buf);
++      exec_len = nbytes;
 +      wait (NULL);
 +      exec_ev = event_new (TLS->ev_base, 0, EV_READ,
 +			   exec_in_interpreter, 0);
@@ -70,7 +84,7 @@ index f78619a..f018c3b 100644
  void do_post (struct command *command, int arg_num, struct arg args[], struct in_ev *ev) {
    assert (arg_num == 2);
    if (ev) { ev->refcnt ++; }
-@@ -1710,6 +1764,7 @@ struct command commands[MAX_COMMANDS_SIZE] = {
+@@ -1710,6 +1778,7 @@ struct command commands[MAX_COMMANDS_SIZE] = {
    {"main_session", {ca_none}, do_main_session, "main_session\tSends updates to this connection (or terminal). Useful only with listening socket", NULL},
    {"mark_read", {ca_peer, ca_none}, do_mark_read, "mark_read <peer>\tMarks messages with peer as read", NULL},
    {"msg", {ca_peer, ca_msg_string_end, ca_none}, do_msg, "msg <peer> <text>\tSends text message to peer", NULL},
@@ -78,9 +92,3 @@ index f78619a..f018c3b 100644
    {"msg_kbd", {ca_peer, ca_string, ca_msg_string_end, ca_none}, do_msg_kbd, "msg <peer> <kbd> <text>\tSends text message to peer with custom kbd", NULL},
    {"post", {ca_peer, ca_msg_string_end, ca_none}, do_post, "post <peer> <text>\tSends text message to peer as admin", NULL},
    {"post_audio", {ca_peer, ca_file_name, ca_none}, do_post_audio, "post_audio <peer> <file>\tPosts audio to peer", NULL},
-diff --git a/tgl b/tgl
---- a/tgl
-+++ b/tgl
-@@ -1 +1 @@
--Subproject commit ffb04caca71de0cddf28cd33a4575922900a59ed
-+Subproject commit ffb04caca71de0cddf28cd33a4575922900a59ed-dirty
