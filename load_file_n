@@ -13,9 +13,11 @@ f="${ADDR[0]}"
 s="${ADDR[1]}"
 it=$(($f-$s))
 
+r=""
 for i in $(seq $it $f)
 do
-    echo "load_file $i"
+    r+="load_file $i\n"
 done
 
+echo -e $r
 

@@ -1,0 +1,12 @@
+#!/usr/bin/python
+from glob import glob
+import sys
+
+chat = sys.argv[1]
+
+PICS_FOLDER = "/home/user/pics/*"
+flist = glob(PICS_FOLDER)
+
+cmd = "send_photo {}".format(chat) + " {}"
+result = "\n".join([cmd.format(f) for f in flist])
+print result
