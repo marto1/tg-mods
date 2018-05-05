@@ -1,23 +1,12 @@
-#!/bin/bash
+#!/usr/bin/python
 #load_file_n 367 3
 #    load_file 367 366 365 364
+import sys
 
-#check if it exists 
-if [ "$0" == "" ]; then
-    exit 1
-fi
-
-IFS='x' read -ra ADDR <<< "$2"
-
-f="${ADDR[0]}"
-s="${ADDR[1]}"
-it=$(($f-$s))
-
-r=""
-for i in $(seq $it $f)
-do
-    r+="load_file $i\n"
-done
-
-echo -e $r
+last_id = int(sys.argv[1])
+n = int(sys.argv[2])
+first_id = last_id - n
+cmd = "load_file {}"
+r = "\n".join([cmd.format(i) for i in range(last_id, first_id, -1)])
+print r
 
