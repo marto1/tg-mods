@@ -1,7 +1,0 @@
-#!/bin/bash
-#check if it exits
-if [ "$0" == "" ]; then
-    exit 1
-fi
-
-echo "msg $1 \"> rothschilds bow to the Bogdanoffs\n> in contact with aliens\n> rumoured to possess psychic abilities\n> control france with an iron fist\n> own castles and banks all over the world\n> direct descendants of the ancient royal blood line\n> will bankroll the first cities on Mars (Bogdangrad will be be the first city)\n> own basically every DNA editing research facility on Earth\n> first designer babies will be Bogdanoff Babies\n> both brothers said to have 215+ IQ\n> you likely have Bogdanbots inside of you right now\n> control France with an iron but fair fist\n> The twins are about 7 decades old, from the space-time reference point of the base human currently accepted by our society\n> In reality, they are timeless beings existing in all points of time and space from the big bang to the end of the universe. We don't know their ultimate plans yet. We hope they’re benevolent beings.﻿\""
