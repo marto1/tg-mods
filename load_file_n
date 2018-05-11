@@ -1,10 +1,9 @@
 #!/usr/bin/python
-#load_file_n 367 3
+#load_file_n 367x3
 #    load_file 367 366 365 364
 import sys
 
-last_id = int(sys.argv[1])
-n = int(sys.argv[2])
+last_id, n = [int(a) for a in sys.argv[2].split("x")]
 first_id = last_id - n
 cmd = "load_file {}"
 r = "\n".join([cmd.format(i) for i in range(last_id, first_id, -1)])
